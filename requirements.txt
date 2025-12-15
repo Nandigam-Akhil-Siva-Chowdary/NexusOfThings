@@ -1,0 +1,12 @@
+# NexusOfThings/requirements.txt - Final compatible version
+Django==3.1.12  # Changed from 3.2.20 to 3.1.12
+djongo==1.3.7
+pymongo==3.11.4
+dnspython==2.6.1
+gunicorn==21.2.0
+whitenoise==6.6.0
+Pillow==10.4.0
+dotenv
+cloudinary
+django-cloudinary-storage
+sqlparse==0.2.4  # Explicitly add this version that Djongo requires
