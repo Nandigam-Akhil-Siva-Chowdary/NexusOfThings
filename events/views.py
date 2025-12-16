@@ -1,7 +1,8 @@
 import datetime
 import logging
+
+import cloudinary.uploader
 from django.conf import settings
-from django.core.files.storage import default_storage
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import Event, Participant, StudentCoordinator
@@ -196,6 +197,16 @@ def register_participant(request):
         if not idea_file:
             return JsonResponse({'success': False, 'message': 'Pitch deck (PDF/PPT) is required for IdeaArena'}, status=400)
 
+        # Validate file type and size (<=50 MB)
+        allowed_extensions = {"pdf", "ppt", "pptx"}
+        extension = idea_file.name.rsplit('.', 1)[-1].lower() if '.' in idea_file.name else ''
+        if extension not in allowed_extensions:
+            return JsonResponse({'success': False, 'message': 'Only PDF, PPT, or PPTX files are allowed.'}, status=400)
+
+        max_size_bytes = 50 * 1024 * 1024
+        if idea_file.size > max_size_bytes:
+            return JsonResponse({'success': False, 'message': 'File too large. Please upload a file under 50 MB.'}, status=400)
+
         # Require valid Cloudinary credentials and store the file there.
         missing_creds = any(
             str(value).startswith("your-development") or not value
@@ -212,8 +223,16 @@ def register_participant(request):
             }, status=500)
 
         try:
-            saved_path = default_storage.save(f'ideaarena/{idea_file.name}', idea_file)
-            idea_file_url = default_storage.url(saved_path)
+            upload_result = cloudinary.uploader.upload(
+                idea_file,
+                folder="ideaarena",
+                resource_type="auto",  # allow raw docs (pdf/ppt/pptx)
+                use_filename=True,
+                unique_filename=False,
+                overwrite=False,
+                allowed_formats=list(allowed_extensions),
+            )
+            idea_file_url = upload_result.get("secure_url")
             logger.info("IdeaArena file saved at %s", idea_file_url)
         except Exception as exc:
             logger.exception("IdeaArena file upload failed: %s", exc)
