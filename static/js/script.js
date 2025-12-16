@@ -299,12 +299,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Extract team size from backend or use defaults
         const teamConfig = {
           'InnovWEB': { min: 1, max: 2 },
-          'SensorShowDown': { min: 2, max: 3 },
-          'IdeaArena': { min: 1, max: 3, needsIdea: true },
+          'SensorShowDown': { min: 1, max: 2 },
+          'IdeaArena': { min: 1, max: 4, needsIdea: true },
           'Error Erase': { min: 1, max: 2 },
         };
 
-        const config = teamConfig[eventName] || { min: 1, max: 3 };
+        const config = teamConfig[eventName] || { min: 1, max: 4 };
         
         teammateFields.innerHTML = `
           <p style="margin-bottom: 20px; color: var(--text-secondary); padding: 10px; background: rgba(0, 212, 255, 0.1); border-radius: 8px;">
