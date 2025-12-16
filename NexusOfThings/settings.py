@@ -15,6 +15,14 @@ CLOUD_NAME = os.getenv('CLOUD_NAME', 'your-development-cloud-name')
 API_KEY = os.getenv('API_KEY', 'your-development-api-key-change-this-in-production')
 API_SECRET = os.getenv('API_SECRET', 'your-development-api-secret-key-change-this-in-production')
 
+# Ensure Cloudinary SDK uses the configured credentials for direct uploads
+cloudinary.config(
+    cloud_name=CLOUD_NAME,
+    api_key=API_KEY,
+    api_secret=API_SECRET,
+    secure=True,
+)
+
 DEBUG = True # Set to True for development
 
 ALLOWED_HOSTS = [

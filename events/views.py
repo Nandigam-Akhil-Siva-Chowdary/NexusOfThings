@@ -78,7 +78,7 @@ def home(request):
             'phone': '+91 9014962753',
         },
         {
-            'name': 'K. sai vrk',
+            'name': 'K. Sai Venkata Radha Krishna',
             'roll': 'Y23CO019',
             'phone': '+91 7075044638',
         },
