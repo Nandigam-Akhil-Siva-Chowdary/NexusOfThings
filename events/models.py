@@ -75,7 +75,8 @@ class Participant(models.Model):
 
     teammate1_name = models.CharField(max_length=100, blank=True, null=True)
     teammate2_name = models.CharField(max_length=100, blank=True, null=True)
-
+    teammate3_name = models.CharField(max_length=100, blank=True, null=True)
+    teammate4_name = models.CharField(max_length=100, blank=True, null=True)
     registration_date = models.DateTimeField(auto_now_add=True)
 
     # ---------- IdeaArena specific fields ----------
