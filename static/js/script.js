@@ -248,93 +248,40 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     eventModal.style.display = 'flex';
 
-    // Check if we have hardcoded event data or need to fetch
-    const hardcodedEvents = {
-      'InnovWEB': {
-        title: 'InnovWEB',
-        description: 'Web development competition focusing on innovative solutions.',
-        rounds_info: 'Two rounds: Preliminary and Final',
-        rules: 'Team size: 2-3 members. Bring your own laptop. Internet access will be provided.',
-        team_requirements: '2-3 members per team',
-        prizes: 'First Prize: ₹10,000, Second Prize: ₹5,000',
-        faculty_coordinator_name: 'Faculty Coordinator',
-        faculty_coordinator_designation: 'Professor',
-        faculty_coordinator_phone: 'N/A',
-        student_coordinators: [
-          { name: 'Student 1', roll_number: '21X01A05XX', phone: '9876543210' },
-          { name: 'Student 2', roll_number: '21X01A05XY', phone: '9876543211' }
-        ]
-      },
-      'SensorShowDown': {
-        title: 'SensorShowDown',
-        description: 'IoT prototyping challenge with real-world sensors.',
-        rounds_info: 'Single round with practical implementation',
-        rules: 'Team size: 2-4 members. All hardware will be provided.',
-        team_requirements: '2-4 members per team',
-        prizes: 'First Prize: ₹8,000, Second Prize: ₹4,000',
-        faculty_coordinator_name: 'Faculty Coordinator',
-        faculty_coordinator_designation: 'Professor',
-        faculty_coordinator_phone: 'N/A',
-        student_coordinators: [
-          { name: 'Student 1', roll_number: '21X01A05XX', phone: '9876543210' }
-        ]
-      },
-      'IdeaArena': {
-        title: 'IdeaArena',
-        description: 'Pitch your innovative tech ideas to a panel of judges.',
-        rounds_info: 'Two rounds: Idea Submission and Final Presentation',
-        rules: 'Team size: 1-3 members. PPT/PDF submission required.',
-        team_requirements: '1-3 members per team',
-        prizes: 'First Prize: ₹6,000, Second Prize: ₹3,000',
-        faculty_coordinator_name: 'Faculty Coordinator',
-        faculty_coordinator_designation: 'Professor',
-        faculty_coordinator_phone: 'N/A',
-        student_coordinators: [
-          { name: 'Student 1', roll_number: '21X01A05XX', phone: '9876543210' }
-        ]
-      },
-      'Error Erase': {
-        title: 'Error Erase',
-        description: 'Debugging competition to find and fix errors in code.',
-        rounds_info: 'Multiple rounds with increasing difficulty',
-        rules: 'Team size: 1-2 members. Individual participation allowed.',
-        team_requirements: '1-2 members per team',
-        prizes: 'First Prize: ₹4,000, Second Prize: ₹2,000',
-        faculty_coordinator_name: 'Faculty Coordinator',
-        faculty_coordinator_designation: 'Professor',
-        faculty_coordinator_phone: 'N/A',
-        student_coordinators: [
-          { name: 'Student 1', roll_number: '21X01A05XX', phone: '9876543210' }
-        ]
-      }
-    };
-
-    // Use hardcoded data for now (remove this in production and use fetch)
-    if (hardcodedEvents[eventName]) {
-      setTimeout(() => {
-        renderEventDetails(hardcodedEvents[eventName]);
-      }, 500);
-    } else {
-      // Fallback to fetch if needed
-      fetch(`/get-event-details/${encodeURIComponent(eventName)}/`)
-        .then(res => {
-          if (!res.ok) throw new Error(`Failed to fetch details (${res.status})`);
-          return res.json();
-        })
-        .then(data => {
-          console.debug('Event details loaded', data);
-          renderEventDetails(data);
-        })
-        .catch(err => {
-          console.error('Error fetching event details', err);
-          modalBody.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
-              <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger-color); margin-bottom: 20px;"></i>
-              <p>Could not load details. Please try again later.</p>
-            </div>
-          `;
-        });
-    }
+    // Fetch event details from Django backend
+    fetch(`/get-event-details/${encodeURIComponent(eventName)}/`)
+      .then(res => {
+        if (!res.ok) throw new Error(`Failed to fetch details (${res.status})`);
+        return res.json();
+      })
+      .then(data => {
+        console.debug('Event details loaded from database', data);
+        
+        // Transform backend data to match frontend structure
+        const eventData = {
+          title: data.title || eventName,
+          description: data.description || 'Details will be updated soon.',
+          rounds_info: data.rounds_info || 'Structure will be shared soon.',
+          rules: data.rules || 'Rules will be announced shortly.',
+          team_requirements: data.team_requirements || 'Refer to rules for team size.',
+          prizes: data.prizes || 'Prize details will be announced during the event.',
+          faculty_coordinator_name: data.faculty_coordinator_name || 'Faculty Coordinator',
+          faculty_coordinator_designation: data.faculty_coordinator_designation || 'Professor',
+          faculty_coordinator_phone: data.faculty_coordinator_phone || 'N/A',
+          student_coordinators: data.student_coordinators || []
+        };
+        
+        renderEventDetails(eventData);
+      })
+      .catch(err => {
+        console.error('Error fetching event details', err);
+        modalBody.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--danger-color); margin-bottom: 20px;"></i>
+            <p>Could not load details. Please try again later.</p>
+          </div>
+        `;
+      });
   }
 
   // Configure registration form for a given event
@@ -345,67 +292,92 @@ document.addEventListener('DOMContentLoaded', () => {
     eventNameField.value = eventName;
     teammateFields.innerHTML = '';
 
-    // Team-size hints and dynamic fields
-    const teamConfig = {
-      'InnovWEB': { min: 2, max: 3 },
-      'SensorShowDown': { min: 2, max: 4 },
-      'IdeaArena': { min: 1, max: 3, needsIdea: true },
-      'Error Erase': { min: 1, max: 2 },
-    };
+    // Fetch event requirements from backend or use defaults
+    fetch(`/get-event-details/${encodeURIComponent(eventName)}/`)
+      .then(res => res.json())
+      .then(data => {
+        // Extract team size from backend or use defaults
+        const teamConfig = {
+          'InnovWEB': { min: 1, max: 2 },
+          'SensorShowDown': { min: 2, max: 3 },
+          'IdeaArena': { min: 1, max: 3, needsIdea: true },
+          'Error Erase': { min: 1, max: 2 },
+        };
 
-    const config = teamConfig[eventName] || { min: 1, max: 3 };
-    
-    teammateFields.innerHTML = `
-      <p style="margin-bottom: 20px; color: var(--text-secondary); padding: 10px; background: rgba(0, 212, 255, 0.1); border-radius: 8px;">
-        <i class="fas fa-users" style="margin-right: 8px;"></i>
-        Team size: ${config.min}-${config.max} members
-      </p>
-      <div class="form-group">
-        <label class="form-label">Teammate 1</label>
-        <input type="text" class="form-input" name="teammate1_name" id="teammate1_name" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Teammate 2</label>
-        <input type="text" class="form-input" name="teammate2_name" id="teammate2_name" />
-      </div>
-    `;
+        const config = teamConfig[eventName] || { min: 1, max: 3 };
+        
+        teammateFields.innerHTML = `
+          <p style="margin-bottom: 20px; color: var(--text-secondary); padding: 10px; background: rgba(0, 212, 255, 0.1); border-radius: 8px;">
+            <i class="fas fa-users" style="margin-right: 8px;"></i>
+            Team size: ${config.min}-${config.max} members
+          </p>
+          <div class="form-group">
+            <label class="form-label">Teammate 1</label>
+            <input type="text" class="form-input" name="teammate1_name" id="teammate1_name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teammate 2</label>
+            <input type="text" class="form-input" name="teammate2_name" id="teammate2_name" />
+          </div>
+        `;
 
-    if (config.max > 2) {
-      teammateFields.insertAdjacentHTML(
-        'beforeend',
-        `
-        <div class="form-group">
-          <label class="form-label">Teammate 3</label>
-          <input type="text" class="form-input" name="teammate3_name" id="teammate3_name" />
-        </div>
-        ${config.max > 3 ? `
-        <div class="form-group">
-          <label class="form-label">Teammate 4</label>
-          <input type="text" class="form-input" name="teammate4_name" id="teammate4_name" />
-        </div>
-        ` : ''}
-      `
-      );
-    }
+        if (config.max > 2) {
+          teammateFields.insertAdjacentHTML(
+            'beforeend',
+            `
+            <div class="form-group">
+              <label class="form-label">Teammate 3</label>
+              <input type="text" class="form-input" name="teammate3_name" id="teammate3_name" />
+            </div>
+            ${config.max > 3 ? `
+            <div class="form-group">
+              <label class="form-label">Teammate 4</label>
+              <input type="text" class="form-input" name="teammate4_name" id="teammate4_name" />
+            </div>
+            ` : ''}
+          `
+          );
+        }
 
-    if (config.needsIdea) {
-      teammateFields.insertAdjacentHTML(
-        'beforeend',
-        `
-        <div class="form-group">
-          <label class="form-label">Idea Description *</label>
-          <textarea class="form-input" name="idea_description" id="idea_description" rows="5" required placeholder="Describe your idea clearly" style="background: rgba(255, 255, 255, 0.05); color: var(--text-primary);"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Upload PPT / PDF *</label>
-          <input type="file" class="form-input" name="idea_file" id="idea_file" accept=".pdf,.ppt,.pptx" required style="padding: 10px; background: rgba(255, 255, 255, 0.05); color: var(--text-primary);" />
-        </div>
-      `
-      );
-    }
+        if (config.needsIdea) {
+          teammateFields.insertAdjacentHTML(
+            'beforeend',
+            `
+            <div class="form-group">
+              <label class="form-label">Idea Description *</label>
+              <textarea class="form-input" name="idea_description" id="idea_description" rows="5" required placeholder="Describe your idea clearly" style="background: rgba(255, 255, 255, 0.05); color: var(--text-primary);"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Upload PPT / PDF *</label>
+              <input type="file" class="form-input" name="idea_file" id="idea_file" accept=".pdf,.ppt,.pptx" required style="padding: 10px; background: rgba(255, 255, 255, 0.05); color: var(--text-primary);" />
+            </div>
+          `
+          );
+        }
 
-    registrationModal.style.display = 'flex';
-    closeModal(eventModal);
+        registrationModal.style.display = 'flex';
+        closeModal(eventModal);
+      })
+      .catch(err => {
+        console.error('Error fetching event requirements:', err);
+        // Fallback to basic form if fetch fails
+        teammateFields.innerHTML = `
+          <p style="margin-bottom: 20px; color: var(--text-secondary); padding: 10px; background: rgba(0, 212, 255, 0.1); border-radius: 8px;">
+            <i class="fas fa-users" style="margin-right: 8px;"></i>
+            Team size: 1-3 members
+          </p>
+          <div class="form-group">
+            <label class="form-label">Teammate 1</label>
+            <input type="text" class="form-input" name="teammate1_name" id="teammate1_name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teammate 2</label>
+            <input type="text" class="form-input" name="teammate2_name" id="teammate2_name" />
+          </div>
+        `;
+        registrationModal.style.display = 'flex';
+        closeModal(eventModal);
+      });
   }
 
   // Handle registration submission with fetch
