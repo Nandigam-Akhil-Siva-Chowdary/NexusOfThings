@@ -17,21 +17,21 @@ EVENT_FALLBACKS = {
         "description": "Build a responsive single-page web app that solves a real-world student problem.",
         "rounds_info": "Round 1: UI/UX assessment (wireframes). Round 2: Functional prototype. Round 3: Final demo & Q/A.",
         "rules": "Original work only; bring your own laptops; internet allowed; frameworks permitted; judges evaluate UI/UX, accessibility, and performance.",
-        "team_requirements": "Teams of 2-3 members.",
+        "team_requirements": "Solo or teams up to 2 members.",
         "prizes": "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000",
     },
     "SensorShowDown": {
         "description": "Rapid IoT prototyping with provided sensors and microcontrollers.",
         "rounds_info": "Round 1: Basic sensor wiring. Round 2: Data acquisition & visualization. Round 3: End-to-end prototype pitch.",
         "rules": "Hardware will be provided on-site; no pre-built code; originality required; safety first with hardware handling.",
-        "team_requirements": "Teams of 2-4 members.",
+        "team_requirements": "Solo or teams up to 2 members.",
         "prizes": "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000",
     },
     "IdeaArena": {
         "description": "Pitch an innovative tech idea with a crisp deck.",
         "rounds_info": "Single round: 7-minute pitch + 3-minute Q/A with the jury.",
         "rules": "Slides are mandatory; focus on problem, solution, feasibility, and impact; plagiarism disqualifies.",
-        "team_requirements": "Solo or teams up to 3 members.",
+        "team_requirements": "Solo or teams up to 4 members.",
         "prizes": "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000",
     },
     "Error Erase": {
@@ -206,6 +206,8 @@ def register_participant(request):
     email = request.POST.get('email')
     teammate1_name = request.POST.get('teammate1_name', '')
     teammate2_name = request.POST.get('teammate2_name', '')
+    teammate3_name = request.POST.get('teammate3_name', '')
+    teammate4_name = request.POST.get('teammate4_name', '')
     idea_description = request.POST.get('idea_description', '')
     idea_file = request.FILES.get('idea_file')
 
@@ -280,11 +282,13 @@ def register_participant(request):
         logger.warning("Team code collision detected for %s; regenerating", team_code)
         team_code = generate_team_code()
 
-    # Get additional teammate fields from form
+    # Get ALL teammate fields from form
+    teammate1_name = request.POST.get('teammate1_name', '')
+    teammate2_name = request.POST.get('teammate2_name', '')
     teammate3_name = request.POST.get('teammate3_name', '')
     teammate4_name = request.POST.get('teammate4_name', '')
 
-    # Create participant record
+    # Create participant record with ALL teammate fields
     participant = Participant(
         event=event,
         team_code=team_code,
@@ -295,14 +299,17 @@ def register_participant(request):
         email=email,
         teammate1_name=teammate1_name or None,
         teammate2_name=teammate2_name or None,
+        teammate3_name=teammate3_name or None,
+        teammate4_name=teammate4_name or None,
         idea_description=idea_description or None,
         idea_file_url=idea_file_url,
     )
     participant.save()
 
     # Log successful registration
-    logger.info("Registration successful | event=%s | team=%s | code=%s | lead=%s", 
-                event, team_name, team_code, team_lead_name)
+    logger.info("Registration successful | event=%s | team=%s | code=%s | lead=%s | teammates=%s", 
+                event, team_name, team_code, team_lead_name, 
+                f"{teammate1_name or ''},{teammate2_name or ''},{teammate3_name or ''},{teammate4_name or ''}")
 
     return JsonResponse({
         'success': True,
