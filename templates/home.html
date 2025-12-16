@@ -438,21 +438,6 @@
       transition: transform 0.5s ease;
     }
 
-    .about-image:hover img {
-      transform: scale(1.05);
-    }
-
-    .about-image::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, transparent, rgba(0, 212, 255, 0.1));
-      pointer-events: none;
-    }
-
     .about-text h3 {
       font-family: 'Orbitron', sans-serif;
       font-size: 1.8rem;
@@ -973,6 +958,7 @@
       .footer-content { grid-template-columns: 1fr; }
       .about-features { grid-template-columns: 1fr; }
       .events-grid { grid-template-columns: 1fr; }
+      .about-image{width: 100vw; height: fit-content;}
     }
 
     @media (max-width: 576px) {
@@ -982,6 +968,7 @@
       .subtitle { font-size: 1.2rem; }
       .dates { font-size: 1rem; }
       .section { padding: 60px 0; }
+      .about-image{width: 100vw; height: fit-content;}
     }
 
     /* PARTICLE EFFECT */
@@ -1114,7 +1101,6 @@
           <li><a href="#about">ABOUT</a></li>
           <li><a href="#events">EVENTS</a></li>
           <li><a href="#contact">CONTACT</a></li>
-          <li><a href="#register" class="btn-neon" id="registerNavBtn">REGISTER</a></li>
         </ul>
       </nav>
     </div>
@@ -1131,19 +1117,19 @@
         
         <div class="counters">
           <div class="counter-item glass">
-            <div class="counter-number" data-count="4">0</div>
+            <div class="counter-number" data-count="4">4</div>
             <div class="counter-label">Technical Events</div>
           </div>
           <div class="counter-item glass">
-            <div class="counter-number" data-count="24000">0</div>
+            <div class="counter-number" data-count="24000">₹24,000</div>
             <div class="counter-label">Prize Pool</div>
           </div>
           <div class="counter-item glass">
-            <div class="counter-number" data-count="2">0</div>
+            <div class="counter-number" data-count="2">2</div>
             <div class="counter-label">Days</div>
           </div>
           <div class="counter-item glass">
-            <div class="counter-number" data-count="100">0</div>
+            <div class="counter-number" data-count="200">200+</div>
             <div class="counter-label">Teams Expected</div>
           </div>
         </div>
@@ -1163,8 +1149,8 @@
       <p class="section-subtitle">A premier technical fest bringing together the brightest minds in technology and innovation</p>
       
       <div class="about-content">
-        <div class="about-image glass glow">
-          <img src="{% static 'images/poster.jfif' %}" style="width: fit-content; " alt="Nexus of Things Poster">
+        <div class="about-image">
+          <img src="{% static 'images/poster.png' %}" style="width: fit-content; border-radius: 3%; " alt="Nexus of Things Poster">
         </div>
         <div class="about-text">
           <h3 class="highlight">TECHNOLOGY REDEFINED</h3>
@@ -1253,7 +1239,7 @@
             <p>{{ event.description|truncatewords:30 }}</p>
             <div class="event-meta">
               <span class="event-prize">Prize: {{ event.prize }}</span>
-              <span class="event-registered">{{ event.registered|default:"0" }} teams registered</span>
+              <span class="event-registered">{{ event.registered}} teams registered</span>
             </div>
           </div>
           <div class="event-card-footer">
@@ -1343,10 +1329,6 @@
               <div class="contact-item">
                 <i class="fas fa-phone"></i>
                 <span>{{ coordinator.phone }}</span>
-              </div>
-              <div class="contact-item">
-                <i class="fab fa-whatsapp"></i>
-                <span>{{ coordinator.whatsapp|default:coordinator.phone }}</span>
               </div>
             </div>
           </div>
