@@ -18,64 +18,92 @@ EVENT_FALLBACKS = {
         "rounds_info": "Round 1: UI/UX assessment (wireframes). Round 2: Functional prototype. Round 3: Final demo & Q/A.",
         "rules": "Original work only; bring your own laptops; internet allowed; frameworks permitted; judges evaluate UI/UX, accessibility, and performance.",
         "team_requirements": "Teams of 2-3 members.",
-        "prizes": "1st: ₹8,000 | 2nd: ₹4,000 | 3rd: ₹2,000",
+        "prizes": "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000",
     },
     "SensorShowDown": {
         "description": "Rapid IoT prototyping with provided sensors and microcontrollers.",
         "rounds_info": "Round 1: Basic sensor wiring. Round 2: Data acquisition & visualization. Round 3: End-to-end prototype pitch.",
         "rules": "Hardware will be provided on-site; no pre-built code; originality required; safety first with hardware handling.",
         "team_requirements": "Teams of 2-4 members.",
-        "prizes": "1st: ₹8,000 | 2nd: ₹4,000 | 3rd: ₹2,000",
+        "prizes": "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000",
     },
     "IdeaArena": {
         "description": "Pitch an innovative tech idea with a crisp deck.",
         "rounds_info": "Single round: 7-minute pitch + 3-minute Q/A with the jury.",
         "rules": "Slides are mandatory; focus on problem, solution, feasibility, and impact; plagiarism disqualifies.",
         "team_requirements": "Solo or teams up to 3 members.",
-        "prizes": "1st: ₹5,000 | 2nd: ₹3,000 | 3rd: ₹2,000",
+        "prizes": "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000",
     },
     "Error Erase": {
         "description": "Time-bound debugging challenge across multiple languages.",
         "rounds_info": "Round 1: MCQ on debugging concepts. Round 2: Fix-the-code. Round 3: Speed debugging finals.",
         "rules": "No internet search; IDEs allowed; solutions must be your own; partial credits for test-cases passed.",
         "team_requirements": "Solo or teams of 2 members.",
-        "prizes": "1st: ₹6,000 | 2nd: ₹3,000 | 3rd: ₹1,500",
+        "prizes": "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000",
     },
 }
 
+# Helper function to get event icons
+def get_event_icon(event_name):
+    icon_map = {
+        'InnovWEB': 'fas fa-laptop-code',
+        'SensorShowDown': 'fas fa-microchip',
+        'IdeaArena': 'fas fa-lightbulb',
+        'Error Erase': 'fas fa-bug'
+    }
+    return icon_map.get(event_name, 'fas fa-code')
+
 def home(request):
     events_qs = Event.objects.all()
-    events = list(events_qs) if events_qs.exists() else []
-
-    # If DB is empty, fall back to static seed data so the page is not blank
-    if not events:
+    events = []
+    
+    # If DB has events, add registration count
+    if events_qs.exists():
+        for event in events_qs:
+            # Count participants for this event
+            registered_count = Participant.objects.filter(event=event.name).count()
+            
+            events.append({
+                "name": event.name,
+                "description": event.description,
+                "prize": EVENT_FALLBACKS.get(event.name, {}).get('prizes', '1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000'),
+                "registered": registered_count,
+                "icon": get_event_icon(event.name)
+            })
+    else:
+        # Fallback with zero registrations
         events = [
             {
                 "name": key,
                 "description": details["description"],
+                "prize": details.get("prizes", "1st: ₹3,000 | 2nd: ₹2,000 | 3rd: ₹1,000"),
+                "registered": 0,
+                "icon": get_event_icon(key)
             }
             for key, details in EVENT_FALLBACKS.items()
         ]
-
+    
     # Sample data for coordinators
     faculty_coordinators = [
         {
             'name': 'Dr N Nagamalleswara Rao',
             'designation': 'Professor & HOD, CSE-IoT',
             'phone': '+91 9490114628',
+            'email': 'rvr.cseiot2024@gmail.com'
         },
         {
             'name': 'Dr Nageswara Rao Eluri',
             'designation': 'Associate Professor, CSE-IoT',
             'phone': '+91 8977782094',
+            'email': 'rvr.cseiot2024@gmail.com'
         }
     ]
     
     student_coordinators = [
         {
-            'name': 'SK. Hussen',
-            'roll': 'Y23CO057',
-            'phone': '+91 9014962753',
+            'name': 'P. Nahin Khan',
+            'roll': 'L24CO069',
+            'phone': '+91 6305260604',
         },
         {
             'name': 'K. Sai Venkata Radha Krishna',
@@ -189,6 +217,14 @@ def register_participant(request):
     if not all(required_fields):
         return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
 
+    # Check if team name already exists for this event
+    if Participant.objects.filter(event=event, team_name__iexact=team_name).exists():
+        return JsonResponse({'success': False, 'message': 'Team name already exists for this event. Please choose a different name.'}, status=400)
+
+    # Check if email already registered for this event
+    if Participant.objects.filter(event=event, email__iexact=email).exists():
+        return JsonResponse({'success': False, 'message': 'This email is already registered for this event.'}, status=400)
+
     # IdeaArena specific validation
     idea_file_url = None
     if event == 'IdeaArena':
@@ -244,6 +280,11 @@ def register_participant(request):
         logger.warning("Team code collision detected for %s; regenerating", team_code)
         team_code = generate_team_code()
 
+    # Get additional teammate fields from form
+    teammate3_name = request.POST.get('teammate3_name', '')
+    teammate4_name = request.POST.get('teammate4_name', '')
+
+    # Create participant record
     participant = Participant(
         event=event,
         team_code=team_code,
@@ -259,8 +300,12 @@ def register_participant(request):
     )
     participant.save()
 
+    # Log successful registration
+    logger.info("Registration successful | event=%s | team=%s | code=%s | lead=%s", 
+                event, team_name, team_code, team_lead_name)
+
     return JsonResponse({
         'success': True,
         'team_code': team_code,
-        'message': f'Registration successful! Your team code is: {team_code}',
+        'message': f'Registration successful! Your team code is: {team_code}. Please save this code for future reference.',
     })
