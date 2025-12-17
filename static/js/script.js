@@ -619,3 +619,144 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openRegistration = openRegistration;
   window.createParticles = createParticles;
 });
+
+
+
+// Add this function to initialize hamburger menu
+function initHamburgerMenu() {
+    const hamburgerBtn = document.querySelector('.hamburger-btn');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const menuOverlay = document.querySelector('.menu-overlay');
+    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+    const mobileRegisterBtn = document.getElementById('mobile-register-btn');
+    const desktopNav = document.querySelector('nav ul');
+    
+    if (!hamburgerBtn || !mobileMenu) return;
+    
+    // Toggle menu
+    hamburgerBtn.addEventListener('click', () => {
+        hamburgerBtn.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+        menuOverlay.classList.toggle('active');
+        document.body.style.overflow = mobileMenu.classList.contains('active') ? 'hidden' : '';
+    });
+    
+    // Close menu on overlay click
+    menuOverlay.addEventListener('click', () => {
+        hamburgerBtn.classList.remove('active');
+        mobileMenu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    });
+    
+    // Handle mobile navigation clicks
+    mobileNavItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (this.getAttribute('href') && this.getAttribute('href').startsWith('#')) {
+                const targetId = this.getAttribute('href');
+                
+                // Close menu
+                hamburgerBtn.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                menuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+                
+                // Update active state
+                mobileNavItems.forEach(navItem => navItem.classList.remove('active'));
+                this.classList.add('active');
+                
+                // If it's not the register button, scroll to section
+                if (targetId !== '#' && this.id !== 'mobile-register-btn') {
+                    e.preventDefault();
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        setTimeout(() => {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 80,
+                                behavior: 'smooth'
+                            });
+                        }, 300);
+                    }
+                }
+            }
+        });
+    });
+    
+    // Handle mobile register button
+    if (mobileRegisterBtn) {
+        mobileRegisterBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Close menu
+            hamburgerBtn.classList.remove('active');
+            mobileMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Trigger registration modal
+            if (registerHeroBtn) {
+                setTimeout(() => {
+                    registerHeroBtn.click();
+                }, 300);
+            }
+        });
+    }
+    
+    // Update active nav item on scroll
+    function updateActiveNavItem() {
+        const sections = document.querySelectorAll('section[id]');
+        const scrollPos = window.scrollY + 100;
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            const sectionId = section.getAttribute('id');
+            
+            if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+                // Update mobile nav
+                mobileNavItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('href') === `#${sectionId}`) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // Update desktop nav
+                if (desktopNav) {
+                    const desktopLinks = desktopNav.querySelectorAll('a');
+                    desktopLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${sectionId}`) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', updateActiveNavItem);
+}
+
+// Add this to your initialization section at the end of script.js:
+// Inside your main initialization block, add:
+initHamburgerMenu();
+
+// Also add this to handle responsive behavior:
+function handleResize() {
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const hamburgerBtn = document.querySelector('.hamburger-btn');
+    const menuOverlay = document.querySelector('.menu-overlay');
+    
+    // If window is resized to desktop size, close mobile menu
+    if (window.innerWidth > 768) {
+        if (mobileMenu && mobileMenu.classList.contains('active')) {
+            mobileMenu.classList.remove('active');
+            if (hamburgerBtn) hamburgerBtn.classList.remove('active');
+            if (menuOverlay) menuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+window.addEventListener('resize', handleResize);
