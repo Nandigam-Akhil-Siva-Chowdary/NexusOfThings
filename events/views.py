@@ -317,6 +317,7 @@ def register_participant(request):
         'message': f'Registration successful! Your team code is: {team_code}. Please save this code for future reference.',
     })
 
+
 def get_participants(request):
     """
     API endpoint to get all registered participants.
@@ -325,16 +326,16 @@ def get_participants(request):
     """
     if request.method != 'GET':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+
     # Get optional event filter from query parameters
     event_filter = request.GET.get('event', None)
-    
+
     # Query participants
     if event_filter:
         participants = Participant.objects.filter(event=event_filter).order_by('-registration_date')
     else:
         participants = Participant.objects.all().order_by('-registration_date')
-    
+
     # Serialize participants to JSON
     participants_data = []
     for participant in participants:
@@ -356,9 +357,41 @@ def get_participants(request):
             'idea_file_url': participant.idea_file_url,
         }
         participants_data.append(participant_dict)
-    
+
     return JsonResponse({
         'success': True,
         'count': len(participants_data),
         'participants': participants_data
+    }, json_dumps_params={'ensure_ascii': False})
+
+
+def get_events(request):
+    """
+    API endpoint to get all events with basic details and registration counts.
+    Returns JSON response with event data.
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    events_qs = Event.objects.all().order_by('name')
+
+    events_data = []
+    for event in events_qs:
+        registered_count = Participant.objects.filter(event=event.name).count()
+        events_data.append({
+            'id': event.id,
+            'name': event.name,
+            'description': event.description,
+            'rounds_info': event.rounds_info,
+            'rules': event.rules,
+            'faculty_coordinator_name': event.faculty_coordinator_name,
+            'faculty_coordinator_designation': event.faculty_coordinator_designation,
+            'faculty_coordinator_phone': event.faculty_coordinator_phone,
+            'registered': registered_count,
+        })
+
+    return JsonResponse({
+        'success': True,
+        'count': len(events_data),
+        'events': events_data,
     }, json_dumps_params={'ensure_ascii': False})
