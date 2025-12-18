@@ -316,3 +316,49 @@ def register_participant(request):
         'team_code': team_code,
         'message': f'Registration successful! Your team code is: {team_code}. Please save this code for future reference.',
     })
+
+def get_participants(request):
+    """
+    API endpoint to get all registered participants.
+    Optional query parameter: ?event=<event_name> to filter by event.
+    Returns JSON response with participant data.
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    # Get optional event filter from query parameters
+    event_filter = request.GET.get('event', None)
+    
+    # Query participants
+    if event_filter:
+        participants = Participant.objects.filter(event=event_filter).order_by('-registration_date')
+    else:
+        participants = Participant.objects.all().order_by('-registration_date')
+    
+    # Serialize participants to JSON
+    participants_data = []
+    for participant in participants:
+        participant_dict = {
+            'id': participant.id,
+            'event': participant.event,
+            'team_code': participant.team_code,
+            'team_name': participant.team_name,
+            'team_lead_name': participant.team_lead_name,
+            'college_name': participant.college_name,
+            'phone_number': participant.phone_number,
+            'email': participant.email,
+            'teammate1_name': participant.teammate1_name,
+            'teammate2_name': participant.teammate2_name,
+            'teammate3_name': participant.teammate3_name,
+            'teammate4_name': participant.teammate4_name,
+            'registration_date': participant.registration_date.isoformat() if participant.registration_date else None,
+            'idea_description': participant.idea_description,
+            'idea_file_url': participant.idea_file_url,
+        }
+        participants_data.append(participant_dict)
+    
+    return JsonResponse({
+        'success': True,
+        'count': len(participants_data),
+        'participants': participants_data
+    }, json_dumps_params={'ensure_ascii': False})
