@@ -55,16 +55,13 @@ def get_event_icon(event_name):
     return icon_map.get(event_name, 'fas fa-code')
 
 
-def registration_details(request, team_code):
-    registration = get_object_or_404(Event, team_code=team_code)
 
-    return render(
-        request,
-        "registration_details.html",
-        {
-            "registration": registration
-        }
-    )
+def registration_details(request, team_code):
+    registration = get_object_or_404(Participant, team_code=team_code)
+
+    return render(request, "registration_details.html", {
+        "registration": registration
+    })
 
 def home(request):
     events_qs = Event.objects.all()
