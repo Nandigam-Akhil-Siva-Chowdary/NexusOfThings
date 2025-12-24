@@ -1,6 +1,6 @@
 # NexusOfThings/urls.py
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 from events import views
@@ -12,6 +12,7 @@ urlpatterns = [
     path('register-participant/', views.register_participant, name='register_participant'),
     path('api/participants/', views.get_participants, name='get_participants'),
     path('api/events/', views.get_events, name='get_events'),
+    path('', include('events.urls')),
 ]
 
 # Serve static files during development
