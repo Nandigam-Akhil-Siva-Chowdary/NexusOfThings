@@ -6,6 +6,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import Event, Participant, StudentCoordinator
+from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,18 @@ def get_event_icon(event_name):
         'Error Erase': 'fas fa-bug'
     }
     return icon_map.get(event_name, 'fas fa-code')
+
+
+def registration_details(request, team_code):
+    registration = get_object_or_404(Event, team_code=team_code)
+
+    return render(
+        request,
+        "registration_details.html",
+        {
+            "registration": registration
+        }
+    )
 
 def home(request):
     events_qs = Event.objects.all()
@@ -173,26 +186,16 @@ def get_event_details(request, event_name):
         return JsonResponse({'error': 'Event not found'}, status=404)
 
 def generate_team_code():
-    """Generate a unique team code using MongoDB-friendly approach"""
-    # Get current date components
-    now = datetime.datetime.now()
-    year_short = str(now.year)[2:]  # Last 2 digits of year
-    month = str(now.month).zfill(2)  # 2-digit month
-    day = str(now.day).zfill(2)  # 2-digit day
-    
-    # Get count of participants registered today
-    today_start = datetime.datetime.combine(now.date(), datetime.time.min)
-    today_end = datetime.datetime.combine(now.date(), datetime.time.max)
-    
-    today_count = Participant.objects.filter(
-        registration_date__gte=today_start,
-        registration_date__lte=today_end
-    ).count()
-    
-    sequence = today_count + 1
-    sequence_str = str(sequence).zfill(3)  # 3-digit sequence
-    
-    return f"NoT{year_short}{month}{day}{sequence_str}"
+    """Generate a short, collision-resistant team code.
+
+    Use a UUID4-based short hex string to avoid deterministic reuse
+    when participants are deleted. The database uniqueness constraint
+    is still respected and the caller will retry on collision.
+    """
+    import uuid
+
+    # Short, uppercase hex from uuid4 (8 chars) prefixed with NoT
+    return f"NoT{uuid.uuid4().hex[:8].upper()}"
 
 def register_participant(request):
     if request.method != 'POST':
@@ -287,6 +290,10 @@ def register_participant(request):
     teammate2_name = request.POST.get('teammate2_name', '')
     teammate3_name = request.POST.get('teammate3_name', '')
     teammate4_name = request.POST.get('teammate4_name', '')
+    teammate1_reg_no = request.POST.get('teammate1_reg_no', '')
+    teammate2_reg_no = request.POST.get('teammate2_reg_no', '')
+    teammate3_reg_no = request.POST.get('teammate3_reg_no', '')
+    teammate4_reg_no = request.POST.get('teammate4_reg_no', '')
 
     # Create participant record with ALL teammate fields
     participant = Participant(
@@ -301,6 +308,10 @@ def register_participant(request):
         teammate2_name=teammate2_name or None,
         teammate3_name=teammate3_name or None,
         teammate4_name=teammate4_name or None,
+        teammate1_reg_no=teammate1_reg_no or None,
+        teammate2_reg_no=teammate2_reg_no or None,
+        teammate3_reg_no=teammate3_reg_no or None,
+        teammate4_reg_no=teammate4_reg_no or None,
         idea_description=idea_description or None,
         idea_file_url=idea_file_url,
     )
@@ -314,8 +325,9 @@ def register_participant(request):
     return JsonResponse({
         'success': True,
         'team_code': team_code,
-        'message': f'Registration successful! Your team code is: {team_code}. Please save this code for future reference.',
+        'redirect_url': f"/registration/{team_code}/",
     })
+
 
 
 def get_participants(request):
@@ -352,6 +364,10 @@ def get_participants(request):
             'teammate2_name': participant.teammate2_name,
             'teammate3_name': participant.teammate3_name,
             'teammate4_name': participant.teammate4_name,
+                'teammate1_reg_no': participant.teammate1_reg_no,
+                'teammate2_reg_no': participant.teammate2_reg_no,
+                'teammate3_reg_no': participant.teammate3_reg_no,
+                'teammate4_reg_no': participant.teammate4_reg_no,
             'registration_date': participant.registration_date.isoformat() if participant.registration_date else None,
             'idea_description': participant.idea_description,
             'idea_file_url': participant.idea_file_url,

@@ -10,4 +10,5 @@ urlpatterns = [
     path('register-participant/', views.register_participant, name='register_participant'),
     path('api/participants/', views.get_participants, name='get_participants'),
     path('api/events/', views.get_events, name='get_events'),
+    path("registration/<str:team_code>/",views.registration_details,name="registration_details"),
 ]

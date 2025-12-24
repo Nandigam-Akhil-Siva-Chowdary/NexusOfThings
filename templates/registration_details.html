@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Registration Details</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  </head>
+  <body>
+    <div class="container">
+      <h2 class="section-title">Registration Successful</h2>
+
+      <div class="card">
+        <p><strong>Event:</strong> {{ registration.event }}</p>
+        <p><strong>Team Name:</strong> {{ registration.team_name }}</p>
+
+        <p style="font-size: 1.3rem; margin-top: 20px">
+          <strong>Team Number:</strong>
+          <span class="highlight"> {{ registration.team_code }} </span>
+        </p>
+      </div>
+
+      <div style="margin-top: 30px">
+        <a href="/" class="btn btn-primary">Back to Home</a>
+      </div>
+    </div>
+  </body>
+</html>

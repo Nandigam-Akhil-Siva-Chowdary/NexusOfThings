@@ -77,6 +77,11 @@ class Participant(models.Model):
     teammate2_name = models.CharField(max_length=100, blank=True, null=True)
     teammate3_name = models.CharField(max_length=100, blank=True, null=True)
     teammate4_name = models.CharField(max_length=100, blank=True, null=True)
+    # College registration numbers for teammates
+    teammate1_reg_no = models.CharField(max_length=50, blank=True, null=True)
+    teammate2_reg_no = models.CharField(max_length=50, blank=True, null=True)
+    teammate3_reg_no = models.CharField(max_length=50, blank=True, null=True)
+    teammate4_reg_no = models.CharField(max_length=50, blank=True, null=True)
     registration_date = models.DateTimeField(auto_now_add=True)
 
     # ---------- IdeaArena specific fields ----------
