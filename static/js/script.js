@@ -260,11 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
         
-        <div class="event-info-section" style="text-align: center; margin-top: 30px;">
-          <button class="btn btn-primary" id="modal-register-btn" style="background: var(--tech-gradient); border: none; padding: 15px 40px; font-family: 'Orbitron', sans-serif; letter-spacing: 1px;">
-            REGISTER NOW
-          </button>
-        </div>
+        
       </div>
     `;
 
